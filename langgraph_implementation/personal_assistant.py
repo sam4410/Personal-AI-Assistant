@@ -325,12 +325,12 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             return response_history
             
         except Exception as e:
-        error_msg = f"Error in run_superstep: {str(e)}"
-        print(f"Full error details: {e}")  # More detailed logging
-        return history + [
-            {"role": "user", "content": message},
-            {"role": "assistant", "content": f"I encountered an error: {error_msg}"}
-        ]
+            error_msg = f"Error in run_superstep: {str(e)}"
+            print(f"Full error details: {e}")  # More detailed logging
+            return history + [
+                {"role": "user", "content": message},
+                {"role": "assistant", "content": f"I encountered an error: {error_msg}"}
+            ]
     
     def cleanup(self):
         """Clean up resources"""
