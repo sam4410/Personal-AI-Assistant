@@ -1,0 +1,4 @@
+1. what is pi * 3?
+2. provide latest news on Iran and Israel war situations?
+3. Compare and contrast the economic policies of the Nehru-Gandhi dynasty with those of the current Indian government, considering their impact on the GDP growth rate, poverty reduction, and income inequality, and also evaluate the effectiveness of their respective policies in achieving sustainable and inclusive development, while also acknowledging any potential limitations or unintended consequences.
+4. I would like to go for dinner tonight in a French restaurant in NYC. Please find a great French restaurant and write a report in markdown to a file dinner.md including the name, address, menu and reviews. Send me a push notification with restaurant name and phone.
