@@ -265,7 +265,7 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             graph_builder.add_edge(START, "worker")
 
             # Compile the graph
-            self.graph = graph_builder.compile(checkpointer=self.memory)
+            self.graph = graph_builder.compile(checkpointer=self.memory, recursion_limit=100)
             print("Graph built successfully")
             
         except Exception as e:
