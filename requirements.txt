@@ -24,7 +24,7 @@ python-dotenv>=1.0.0
 
 # Utilities and Data Processing
 uuid>=1.30
-asyncio-compat>=0.1.0
+asyncio-compat
 
 # Development and Testing (Optional)
 pytest>=7.0.0
