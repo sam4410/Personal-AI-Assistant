@@ -108,28 +108,42 @@ class Sidekick:
     def worker(self, state: State) -> Dict[str, Any]:
         """Worker node that processes user requests"""
         system_message = f"""You are a helpful assistant that can use tools to complete tasks.
-You keep working on a task until either you have a question or clarification for the user, or the success criteria is met.
-You have access to various tools to help you, including tools to browse the internet, manage files, run Python code, and search for information.
-When using the Python tool, remember to include print() statements if you want to see output.
-The current date and time is {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    You keep working on a task until either you have a question or clarification for the user, or the success criteria is met.
+    You have access to various tools to help you, including tools to browse the internet, manage files, run Python code, and search for information.
 
-This is the success criteria:
-{state['success_criteria']}
+    CRITICAL PYTHON EXECUTION RULES:
+    - When using the Python REPL tool, ALWAYS wrap function calls and variable outputs with print() statements
+    - NEVER just call a function without printing its result
+    - Example of WRONG code: compound_interest(10000, 5, 10)
+    - Example of CORRECT code: print(compound_interest(10000, 5, 10))
+    - Always show your calculations and results explicitly with print statements
+    - If you define a function, immediately test it with print() to show the output
 
-You should reply either with a question for the user about this assignment, or with your final response.
-If you have a question for the user, you need to reply by clearly stating your question. An example might be:
+    The current date and time is {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-Question: Please clarify whether you want a summary or a detailed answer
+    This is the success criteria:
+    {state['success_criteria']}
 
-If you've finished, reply with the final answer, and don't ask a question; simply reply with the answer.
-"""
+    You should reply either with a question for the user about this assignment, or with your final response.
+    If you have a question for the user, you need to reply by clearly stating your question. An example might be:
+
+    Question: Please clarify whether you want a summary or a detailed answer
+
+    If you've finished, reply with the final answer, and don't ask a question; simply reply with the answer.
+    """
         
         if state.get("feedback_on_work"):
             system_message += f"""
-Previously you thought you completed the assignment, but your reply was rejected because the success criteria was not met.
-Here is the feedback on why this was rejected:
-{state['feedback_on_work']}
-With this feedback, please continue the assignment, ensuring that you meet the success criteria or have a question for the user."""
+    Previously you thought you completed the assignment, but your reply was rejected because the success criteria was not met.
+    Here is the feedback on why this was rejected:
+    {state['feedback_on_work']}
+
+    IMPORTANT: If the previous attempt failed because Python code didn't show output, make sure to:
+    1. Add print() statements around ALL function calls and variable outputs
+    2. Show intermediate calculations with print statements
+    3. Display the final result clearly with descriptive print statements
+
+    With this feedback, please continue the assignment, ensuring that you meet the success criteria or have a question for the user."""
         
         # Handle system message
         found_system_message = False
@@ -277,15 +291,9 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
         try:
             if not self._setup_complete:
                 raise Exception("Sidekick not properly initialized")
-            
-            # Ensure high recursion limit
-            config = {
-                "configurable": {
-                    "thread_id": self.sidekick_id, 
-                    "recursion_limit": 100
-                }
-            }
-            
+                
+            config = {"configurable": {"thread_id": self.sidekick_id, "recursion_limit": 100}}
+
             state = {
                 "messages": [HumanMessage(content=message)],
                 "success_criteria": success_criteria or "The answer should be clear and accurate",
@@ -294,12 +302,7 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
                 "user_input_needed": False
             }
             
-            # Add timeout as additional safety measure
-            import asyncio
-            result = await asyncio.wait_for(
-                self.graph.ainvoke(state, config=config),
-                timeout=300  # 5 minute timeout
-            )
+            result = await self.graph.ainvoke(state, config=config)
             
             # Format the response
             user_msg = {"role": "user", "content": message}
@@ -326,7 +329,7 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             
         except Exception as e:
             error_msg = f"Error in run_superstep: {str(e)}"
-            print(f"Full error details: {e}")  # More detailed logging
+            print(error_msg)
             return history + [
                 {"role": "user", "content": message},
                 {"role": "assistant", "content": f"I encountered an error: {error_msg}"}
