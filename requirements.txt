@@ -24,7 +24,6 @@ python-dotenv>=1.0.0
 
 # Utilities and Data Processing
 uuid>=1.30
-aiocompat
 
 # Development and Testing (Optional)
 pytest>=7.0.0
