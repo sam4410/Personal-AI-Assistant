@@ -265,7 +265,7 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             graph_builder.add_edge(START, "worker")
 
             # Compile the graph
-            self.graph = graph_builder.compile(checkpointer=self.memory, recursion_limit=100)
+            self.graph = graph_builder.compile(checkpointer=self.memory)
             print("Graph built successfully")
             
         except Exception as e:
@@ -273,22 +273,33 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             raise
 
     async def run_superstep(self, message, success_criteria, history):
-        """Run a complete workflow step"""
-        try:
-            if not self._setup_complete:
-                raise Exception("Sidekick not properly initialized")
-                
-            config = {"configurable": {"thread_id": self.sidekick_id, "recursion_limit": 100}}
-
-            state = {
-                "messages": [HumanMessage(content=message)],
-                "success_criteria": success_criteria or "The answer should be clear and accurate",
-                "feedback_on_work": None,
-                "success_criteria_met": False,
-                "user_input_needed": False
+    """Run a complete workflow step"""
+    try:
+        if not self._setup_complete:
+            raise Exception("Sidekick not properly initialized")
+        
+        # Ensure high recursion limit
+        config = {
+            "configurable": {
+                "thread_id": self.sidekick_id, 
+                "recursion_limit": 100
             }
-            
-            result = await self.graph.ainvoke(state, config=config)
+        }
+        
+        state = {
+            "messages": [HumanMessage(content=message)],
+            "success_criteria": success_criteria or "The answer should be clear and accurate",
+            "feedback_on_work": None,
+            "success_criteria_met": False,
+            "user_input_needed": False
+        }
+        
+        # Add timeout as additional safety measure
+        import asyncio
+        result = await asyncio.wait_for(
+            self.graph.ainvoke(state, config=config),
+            timeout=300  # 5 minute timeout
+        )
             
             # Format the response
             user_msg = {"role": "user", "content": message}
@@ -314,12 +325,12 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             return response_history
             
         except Exception as e:
-            error_msg = f"Error in run_superstep: {str(e)}"
-            print(error_msg)
-            return history + [
-                {"role": "user", "content": message},
-                {"role": "assistant", "content": f"I encountered an error: {error_msg}"}
-            ]
+        error_msg = f"Error in run_superstep: {str(e)}"
+        print(f"Full error details: {e}")  # More detailed logging
+        return history + [
+            {"role": "user", "content": message},
+            {"role": "assistant", "content": f"I encountered an error: {error_msg}"}
+        ]
     
     def cleanup(self):
         """Clean up resources"""
