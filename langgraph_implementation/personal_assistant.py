@@ -273,33 +273,33 @@ Overall you should give the Assistant the benefit of the doubt if they say they'
             raise
 
     async def run_superstep(self, message, success_criteria, history):
-    """Run a complete workflow step"""
-    try:
-        if not self._setup_complete:
-            raise Exception("Sidekick not properly initialized")
-        
-        # Ensure high recursion limit
-        config = {
-            "configurable": {
-                "thread_id": self.sidekick_id, 
-                "recursion_limit": 100
+        """Run a complete workflow step"""
+        try:
+            if not self._setup_complete:
+                raise Exception("Sidekick not properly initialized")
+            
+            # Ensure high recursion limit
+            config = {
+                "configurable": {
+                    "thread_id": self.sidekick_id, 
+                    "recursion_limit": 100
+                }
             }
-        }
-        
-        state = {
-            "messages": [HumanMessage(content=message)],
-            "success_criteria": success_criteria or "The answer should be clear and accurate",
-            "feedback_on_work": None,
-            "success_criteria_met": False,
-            "user_input_needed": False
-        }
-        
-        # Add timeout as additional safety measure
-        import asyncio
-        result = await asyncio.wait_for(
-            self.graph.ainvoke(state, config=config),
-            timeout=300  # 5 minute timeout
-        )
+            
+            state = {
+                "messages": [HumanMessage(content=message)],
+                "success_criteria": success_criteria or "The answer should be clear and accurate",
+                "feedback_on_work": None,
+                "success_criteria_met": False,
+                "user_input_needed": False
+            }
+            
+            # Add timeout as additional safety measure
+            import asyncio
+            result = await asyncio.wait_for(
+                self.graph.ainvoke(state, config=config),
+                timeout=300  # 5 minute timeout
+            )
             
             # Format the response
             user_msg = {"role": "user", "content": message}
